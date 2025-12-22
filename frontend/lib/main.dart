@@ -4,6 +4,7 @@ import 'providers/auth_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/session_screens.dart';
+import 'screens/profile_screen.dart';
 
 void main() {
   runApp(
@@ -60,13 +61,13 @@ class MyApp extends StatelessWidget {
       ),
       home: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
-          return authProvider.isAuthenticated ? DashboardScreen() : LoginScreen();
+          return authProvider.isAuthenticated ?  DashboardScreen() : LoginScreen();
         },
       ),
       routes: {
         '/login': (context) => LoginScreen(),
-        '/dashboard': (context) => DashboardScreen(),
-        '/create-session': (context) => SessionCreateScreen(),
+        '/dashboard': (context) =>  DashboardScreen(),
+        '/create-session': (context) =>  SessionCreateScreen(),
         '/profile': (context) => ProfileScreen(),
       },
       onGenerateRoute: (settings) {

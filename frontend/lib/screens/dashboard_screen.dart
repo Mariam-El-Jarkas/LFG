@@ -67,7 +67,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          // Profile Icon Button
           GestureDetector(
             onTap: () => Navigator.pushNamed(context, '/profile'),
             child: Container(
@@ -724,7 +723,6 @@ class _SessionCardState extends State<SessionCard> {
   }
 }
 
-// ==================== STYLED GAME COLLECTION SCREEN ====================
 class GameCollectionScreen extends StatefulWidget {
   const GameCollectionScreen();
 
@@ -1296,7 +1294,6 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
   }
 }
 
-// ==================== STYLED FRIEND LIST SCREEN ====================
 class FriendListScreen extends StatefulWidget {
   const FriendListScreen();
 

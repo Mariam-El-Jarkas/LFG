@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../models/session.dart';
+import '../models/game.dart';
 
 class SessionCreateScreen extends StatefulWidget {
   @override
@@ -10,12 +11,101 @@ class SessionCreateScreen extends StatefulWidget {
 }
 
 class _SessionCreateScreenState extends State<SessionCreateScreen> {
-  final _gameIdController = TextEditingController();
   final _locationController = TextEditingController();
   final _maxPlayersController = TextEditingController(text: '4');
   final _noteController = TextEditingController();
   DateTime? _selectedDateTime;
   bool _isLoading = false;
+  List<Game> _userGames = [];
+  Game? _selectedGame;
+  bool _loadingGames = false;
+  bool _showAddNewGame = false;
+  final _newGameTitleController = TextEditingController();
+  final _newGamePlatformController = TextEditingController();
+  final _newGameGenreController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserGames();
+  }
+
+  Future<void> _loadUserGames() async {
+    setState(() => _loadingGames = true);
+    try {
+      final userId = Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
+      if (userId != null) {
+        final games = await ApiService.getUserGames(userId);
+        setState(() => _userGames = games);
+      }
+    } catch (e) {
+      print('Error loading games: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load games: $e'),
+          backgroundColor: const Color(0xFFFF6584),
+        ),
+      );
+    } finally {
+      setState(() => _loadingGames = false);
+    }
+  }
+
+  Future<void> _addNewGame() async {
+    if (_newGameTitleController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Game title is required'),
+          backgroundColor: const Color(0xFFFF6584),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final result = await ApiService.addGame(
+        title: _newGameTitleController.text,
+        platform: _newGamePlatformController.text.isNotEmpty ? _newGamePlatformController.text : null,
+        genre: _newGameGenreController.text.isNotEmpty ? _newGameGenreController.text : null,
+      );
+      
+      // Reload games list
+      await _loadUserGames();
+      
+      // Find and select the newly added game
+      final newGame = _userGames.firstWhere(
+        (game) => game.title == _newGameTitleController.text,
+        orElse: () => _userGames.first,
+      );
+      
+      setState(() {
+        _selectedGame = newGame;
+        _showAddNewGame = false;
+      });
+      
+      // Clear new game form
+      _newGameTitleController.clear();
+      _newGamePlatformController.clear();
+      _newGameGenreController.clear();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Game added successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding game: $e'),
+          backgroundColor: const Color(0xFFFF6584),
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _selectDateTime() async {
     final date = await showDatePicker(
@@ -46,10 +136,10 @@ class _SessionCreateScreenState extends State<SessionCreateScreen> {
   }
 
   Future<void> _createSession() async {
-    if (_gameIdController.text.isEmpty || _selectedDateTime == null) {
+    if (_selectedGame == null || _selectedDateTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill in required fields'),
+          content: Text('Please select a game and date/time'),
           backgroundColor: Color(0xFFFF6584),
         ),
       );
@@ -60,7 +150,7 @@ class _SessionCreateScreenState extends State<SessionCreateScreen> {
 
     try {
       await ApiService.createSession(
-        gameId: int.parse(_gameIdController.text),
+        gameId: _selectedGame!.id,
         sessionDateTime: _selectedDateTime!,
         location: _locationController.text,
         maxPlayers: int.tryParse(_maxPlayersController.text) ?? 4,
@@ -78,13 +168,311 @@ class _SessionCreateScreenState extends State<SessionCreateScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text('Error creating session: $e'),
           backgroundColor: const Color(0xFFFF6584),
         ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Widget _buildGameSelection() {
+    if (_loadingGames) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F9FF),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: Theme.of(context).primaryColor),
+              const SizedBox(height: 8),
+              const Text(
+                'Loading your games...',
+                style: TextStyle(color: Color(0xFF666666)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_showAddNewGame) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF6C63FF), width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Add New Game',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6C63FF),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _newGameTitleController,
+              decoration: InputDecoration(
+                labelText: 'Game Title *',
+                prefixIcon: const Icon(Icons.sports_esports, size: 20),
+                filled: true,
+                fillColor: const Color(0xFFF8F9FF),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _newGamePlatformController,
+              decoration: InputDecoration(
+                labelText: 'Platform (e.g., PS5, PC, Switch)',
+                prefixIcon: const Icon(Icons.computer, size: 20),
+                filled: true,
+                fillColor: const Color(0xFFF8F9FF),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _newGameGenreController,
+              decoration: InputDecoration(
+                labelText: 'Genre (e.g., RPG, FPS, Strategy)',
+                prefixIcon: const Icon(Icons.category, size: 20),
+                filled: true,
+                fillColor: const Color(0xFFF8F9FF),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(() => _showAddNewGame = false);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF666666),
+                      side: const BorderSide(color: Color(0xFFDDDDDD)),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _addNewGame,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6C63FF),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Add Game'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE0E0E0)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Select Game *',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF999999),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (_selectedGame != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0F3FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF6C63FF), Color(0xFF8B78FF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _selectedGame!.title.substring(0, 1).toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _selectedGame!.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            if (_selectedGame!.platform != null)
+                              Text(
+                                _selectedGame!.platform!,
+                                style: const TextStyle(
+                                  color: Color(0xFF666666),
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.clear, size: 20),
+                        onPressed: () {
+                          setState(() => _selectedGame = null);
+                        },
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.sports_esports, color: Color(0xFF999999)),
+                      SizedBox(width: 12),
+                      Text(
+                        'No game selected',
+                        style: TextStyle(color: Color(0xFF999999)),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (_userGames.isNotEmpty)
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE0E0E0)),
+            ),
+            child: ExpansionTile(
+              title: const Text(
+                'Your Game Collection',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF666666),
+                ),
+              ),
+              initiallyExpanded: false,
+              children: _userGames.map((game) {
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  leading: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6C63FF), Color(0xFF8B78FF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        game.title.substring(0, 1).toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    game.title,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  subtitle: game.platform != null
+                      ? Text(
+                          game.platform!,
+                          style: const TextStyle(fontSize: 12),
+                        )
+                      : null,
+                  trailing: _selectedGame?.id == game.id
+                      ? const Icon(Icons.check_circle, color: Color(0xFF6C63FF))
+                      : null,
+                  onTap: () {
+                    setState(() => _selectedGame = game);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () {
+            setState(() => _showAddNewGame = true);
+          },
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Add New Game'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF6C63FF),
+            side: const BorderSide(color: Color(0xFF6C63FF)),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -147,17 +535,10 @@ class _SessionCreateScreenState extends State<SessionCreateScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    TextField(
-                      controller: _gameIdController,
-                      decoration: InputDecoration(
-                        labelText: 'Game ID *',
-                        prefixIcon: const Icon(Icons.sports_esports, color: Color(0xFF6C63FF)),
-                        filled: true,
-                        fillColor: const Color(0xFFF8F9FF),
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                    const SizedBox(height: 16),
+                    // Game Selection Section
+                    _buildGameSelection(),
+                    const SizedBox(height: 20),
+                    // Date & Time
                     GestureDetector(
                       onTap: _selectDateTime,
                       child: Container(
@@ -175,15 +556,30 @@ class _SessionCreateScreenState extends State<SessionCreateScreen> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(
-                                _selectedDateTime == null
-                                    ? 'Select Date & Time *'
-                                    : _selectedDateTime.toString(),
-                                style: TextStyle(
-                                  color: _selectedDateTime == null
-                                      ? const Color(0xFF999999)
-                                      : const Color(0xFF333333),
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Date & Time *',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: const Color(0xFF999999),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _selectedDateTime == null
+                                        ? 'Select date and time'
+                                        : _selectedDateTime!.toLocal().toString(),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: _selectedDateTime == null
+                                          ? const Color(0xFF999999)
+                                          : const Color(0xFF333333),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             Icon(
@@ -230,7 +626,9 @@ class _SessionCreateScreenState extends State<SessionCreateScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _createSession,
+                        onPressed: (_isLoading || _selectedGame == null || _selectedDateTime == null) 
+                            ? null 
+                            : _createSession,
                         icon: _isLoading
                             ? const SizedBox(
                                 height: 20,
@@ -283,7 +681,7 @@ class _SessionCreateScreenState extends State<SessionCreateScreen> {
                     SizedBox(height: 8),
                     Text('• Pick a convenient time for everyone'),
                     Text('• Make sure your location has enough space'),
-                    Text('• Specify the game ID so friends can join'),
+                    Text('• Select a game from your collection'),
                     Text('• Add notes about any special requirements'),
                   ],
                 ),
@@ -297,10 +695,12 @@ class _SessionCreateScreenState extends State<SessionCreateScreen> {
 
   @override
   void dispose() {
-    _gameIdController.dispose();
     _locationController.dispose();
     _maxPlayersController.dispose();
     _noteController.dispose();
+    _newGameTitleController.dispose();
+    _newGamePlatformController.dispose();
+    _newGameGenreController.dispose();
     super.dispose();
   }
 }
@@ -698,260 +1098,5 @@ class _SessionDetailScreenState extends State<SessionDetailScreen> {
       default:
         return Colors.grey;
     }
-  }
-}
-class ProfileScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().currentUser;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: const Color(0xFF6C63FF),
-        foregroundColor: Colors.white,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF5F7FF),
-              Colors.white,
-            ],
-          ),
-        ),
-        child: user == null
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: Theme.of(context).primaryColor),
-                    const SizedBox(height: 16),
-                    const Text('Loading profile...'),
-                  ],
-                ),
-              )
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF6C63FF), Color(0xFF8B78FF)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                user.username.substring(0, 1).toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            user.username,
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF333333),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            user.email,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF666666),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8F9FF),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _buildStatItem('Sessions', '0'),
-                                _buildStatItem('Games', '0'),
-                                _buildStatItem('Friends', '0'),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Account Details',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF333333),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildDetailItem('Username', user.username),
-                          const Divider(height: 24),
-                          _buildDetailItem('Email', user.email),
-                          const Divider(height: 24),
-                          _buildDetailItem('Joined', user.createdAt.toString()),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            // ignore: deprecated_member_use
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 15,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Account Actions',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF333333),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                context.read<AuthProvider>().logout();
-                                Navigator.of(context).pushReplacementNamed('/login');
-                              },
-                              icon: const Icon(Icons.logout),
-                              label: const Text('Logout'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFF6584),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'This will sign you out of the application',
-                            style: TextStyle(
-                              color: Color(0xFF666666),
-                              fontSize: 12,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF6C63FF),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF666666),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF999999),
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF333333),
-          ),
-        ),
-      ],
-    );
   }
 }
