@@ -25,10 +25,12 @@ class AuthController {
                 return json_encode(['error' => 'User already exists']);
             }
 
-            $hashed = password_hash($data['password'], PASSWORD_BCRYPT);
+    
+            $plainPassword = $data['password'];
             
-            $stmt = $this->pdo->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)');
-            $stmt->execute([$data['username'], $data['email'], $hashed]);
+    
+            $stmt = $this->pdo->prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)');
+            $stmt->execute([$data['username'], $data['email'], $plainPassword]);
             
             $userId = $this->pdo->lastInsertId();
             
@@ -56,16 +58,18 @@ class AuthController {
         }
 
         try {
-            $stmt = $this->pdo->prepare('SELECT id, username, email, password_hash, created_at FROM users WHERE email = ?');
+          
+            $stmt = $this->pdo->prepare('SELECT id, username, email, password, created_at FROM users WHERE email = ?');
             $stmt->execute([$data['email']]);
             $user = $stmt->fetch();
 
-            if (!$user || !password_verify($data['password'], $user['password_hash'])) {
+      
+            if (!$user || $user['password'] !== $data['password']) {
                 http_response_code(401);
                 return json_encode(['error' => 'Invalid credentials']);
             }
 
-            unset($user['password_hash']);
+            unset($user['password']);
             
             return json_encode([
                 'message' => 'Login successful',
@@ -95,4 +99,3 @@ class AuthController {
         }
     }
 }
-

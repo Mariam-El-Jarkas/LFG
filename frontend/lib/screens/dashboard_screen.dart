@@ -67,6 +67,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           const SizedBox(width: 8),
+//           GestureDetector(
+//   onTap: () => print("👆 Tapped"),
+//   onDoubleTap: () => print("👆👆 Double tapped"),
+//   onLongPress: () => print("👆⏱️ Held down"),
+//   onTapDown: (details) => print("Finger touched screen"),
+//   onTapUp: (details) => print("Finger lifted"),
+//   child: YourWidget(),
+// )
           GestureDetector(
             onTap: () => Navigator.pushNamed(context, '/profile'),
             child: Container(
@@ -92,12 +100,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: _selectedIndex == 0
-          ? _buildHomeTab(user?.id)
+          ? _buildHomeTab(user?.id) // If index = 0 → Home Tab
           : _selectedIndex == 1
-              ? GameCollectionScreen()
+              ? GameCollectionScreen() // If index = 1 → Games Screen
               : _selectedIndex == 2
-                  ? FriendListScreen()
-                  : Container(),
+                  ? FriendListScreen() // If index = 2 → Friends Screen
+                  : Container(), // Fallback (should never happen)
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -138,10 +146,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
+      //creates + in hoome screen to add sessions
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
               onPressed: () async {
-                final result = await Navigator.pushNamed(context, '/create-session');
+                final result =
+                    await Navigator.pushNamed(context, '/create-session');
                 if (result == true || result == 'refresh') {
                   setState(() {
                     _needsRefresh = true;
@@ -189,7 +199,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(color: Theme.of(context).primaryColor),
+                  CircularProgressIndicator(
+                      color: Theme.of(context).primaryColor),
                   const SizedBox(height: 16),
                   const Text(
                     'Loading gaming sessions...',
@@ -199,7 +210,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             );
           }
+          //This is an ERROR HANDLING UI for failed API callsWhat is snapshot really?
+// snapshot is an AsyncSnapshot<T> object that contains:
 
+// dart
+// class AsyncSnapshot<T> {
+//   final ConnectionState connectionState;  // waiting, done, active
+//   final T? data;                          // Your actual data (if loaded)
+//   final Object? error;                    // Error (if failed)
+//   final StackTrace? stackTrace;           // Where error happened
+
+//   bool get hasData => data != null;
+//   bool get hasError => error != null;
+// }
           if (snapshot.hasError) {
             return Center(
               child: Column(
@@ -296,7 +319,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 24),
                         ElevatedButton(
                           onPressed: () async {
-                            final result = await Navigator.pushNamed(context, '/create-session');
+                            final result = await Navigator.pushNamed(
+                                context, '/create-session');
                             if (result == true || result == 'refresh') {
                               _refreshSessions();
                             }
@@ -360,7 +384,8 @@ class _SessionCardState extends State<SessionCard> {
   }
 
   Future<void> _loadUserRsvp() async {
-    if (widget.session.attendees != null && widget.session.attendees!.isNotEmpty) {
+    if (widget.session.attendees != null &&
+        widget.session.attendees!.isNotEmpty) {
       for (var attendee in widget.session.attendees!) {
         if (attendee.userId == widget.userId) {
           setState(() => _userRsvpStatus = attendee.rsvpStatus);
@@ -386,15 +411,16 @@ class _SessionCardState extends State<SessionCard> {
       await ApiService.rsvpSession(widget.session.id, status);
       setState(() => _userRsvpStatus = status);
       _loadAllRsvps();
-      
+
       if (widget.onRsvpChanged != null) {
         widget.onRsvpChanged!();
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('You are $status!'),
-          backgroundColor: status == 'going' ? Colors.green : const Color(0xFFFF6584),
+          backgroundColor:
+              status == 'going' ? Colors.green : const Color(0xFFFF6584),
         ),
       );
     } catch (e) {
@@ -411,11 +437,12 @@ class _SessionCardState extends State<SessionCard> {
 
   @override
   Widget build(BuildContext context) {
-    final goingCount = _allRsvps
-            ?.where((rsvp) => rsvp.rsvpStatus == 'going')
-            .length ??
-        widget.session.attendees?.where((a) => a.rsvpStatus == 'going').length ??
-        0;
+    final goingCount =
+        _allRsvps?.where((rsvp) => rsvp.rsvpStatus == 'going').length ??
+            widget.session.attendees
+                ?.where((a) => a.rsvpStatus == 'going')
+                .length ??
+            0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -445,7 +472,8 @@ class _SessionCardState extends State<SessionCard> {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF0F3FF),
                               borderRadius: BorderRadius.circular(12),
@@ -464,7 +492,8 @@ class _SessionCardState extends State<SessionCard> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.person, size: 16, color: Color(0xFF666666)),
+                          const Icon(Icons.person,
+                              size: 16, color: Color(0xFF666666)),
                           const SizedBox(width: 4),
                           Text(
                             'Hosted by ${widget.session.creatorName}',
@@ -479,7 +508,8 @@ class _SessionCardState extends State<SessionCard> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -520,11 +550,14 @@ class _SessionCardState extends State<SessionCard> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.calendar_today, size: 18, color: Theme.of(context).primaryColor),
+                          Icon(Icons.calendar_today,
+                              size: 18, color: Theme.of(context).primaryColor),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              widget.session.sessionDateTime.toLocal().toString(),
+                              widget.session.sessionDateTime
+                                  .toLocal()
+                                  .toString(),
                               style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
@@ -536,7 +569,8 @@ class _SessionCardState extends State<SessionCard> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.location_on, size: 18, color: Theme.of(context).primaryColor),
+                          Icon(Icons.location_on,
+                              size: 18, color: Theme.of(context).primaryColor),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -552,7 +586,8 @@ class _SessionCardState extends State<SessionCard> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.people_alt, size: 18, color: Theme.of(context).primaryColor),
+                          Icon(Icons.people_alt,
+                              size: 18, color: Theme.of(context).primaryColor),
                           const SizedBox(width: 8),
                           Text(
                             '${widget.session.maxPlayers} max players',
@@ -579,7 +614,8 @@ class _SessionCardState extends State<SessionCard> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.chat, size: 18, color: Theme.of(context).primaryColor),
+                    Icon(Icons.chat,
+                        size: 18, color: Theme.of(context).primaryColor),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -594,7 +630,6 @@ class _SessionCardState extends State<SessionCard> {
                 ),
               ),
             const SizedBox(height: 20),
-            
             if (_userRsvpStatus == null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -609,7 +644,9 @@ class _SessionCardState extends State<SessionCard> {
                   ),
                   const SizedBox(height: 12),
                   _loadingRsvp
-                      ? Center(child: CircularProgressIndicator(color: Theme.of(context).primaryColor))
+                      ? Center(
+                          child: CircularProgressIndicator(
+                              color: Theme.of(context).primaryColor))
                       : Row(
                           children: [
                             Expanded(
@@ -620,7 +657,8 @@ class _SessionCardState extends State<SessionCard> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -635,8 +673,10 @@ class _SessionCardState extends State<SessionCard> {
                                 label: const Text("Can't Go"),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: const Color(0xFFFF6584),
-                                  side: const BorderSide(color: Color(0xFFFF6584)),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  side: const BorderSide(
+                                      color: Color(0xFFFF6584)),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -649,9 +689,10 @@ class _SessionCardState extends State<SessionCard> {
               )
             else
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: _userRsvpStatus == 'going' 
+                  color: _userRsvpStatus == 'going'
                       ? Colors.green.withOpacity(0.1)
                       : const Color(0xFFFF6584).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -665,22 +706,27 @@ class _SessionCardState extends State<SessionCard> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      _userRsvpStatus == 'going' ? Icons.check_circle : Icons.cancel,
+                      _userRsvpStatus == 'going'
+                          ? Icons.check_circle
+                          : Icons.cancel,
                       size: 18,
-                      color: _userRsvpStatus == 'going' ? Colors.green : const Color(0xFFFF6584),
+                      color: _userRsvpStatus == 'going'
+                          ? Colors.green
+                          : const Color(0xFFFF6584),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'You: ${_userRsvpStatus!.replaceAll('_', ' ')}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: _userRsvpStatus == 'going' ? Colors.green : const Color(0xFFFF6584),
+                        color: _userRsvpStatus == 'going'
+                            ? Colors.green
+                            : const Color(0xFFFF6584),
                       ),
                     ),
                   ],
                 ),
               ),
-            
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
@@ -689,7 +735,7 @@ class _SessionCardState extends State<SessionCard> {
                   '/session-detail',
                   arguments: widget.session.id,
                 );
-                
+
                 if (result == true || result == 'refresh') {
                   _loadUserRsvp();
                   _loadAllRsvps();
@@ -747,7 +793,8 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
   Future<void> _loadGames() async {
     setState(() => _loadingGames = true);
     try {
-      final userId = Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
+      final userId =
+          Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
       if (userId != null) {
         final games = await ApiService.getUserGames(userId);
         setState(() => _games = games);
@@ -790,16 +837,20 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
 
   IconData _getPlatformIcon(String platform) {
     final lowerPlatform = platform.toLowerCase();
-    
+
     if (lowerPlatform.contains('playstation') || lowerPlatform.contains('ps')) {
       return Icons.videogame_asset;
     } else if (lowerPlatform.contains('xbox')) {
       return Icons.sports_esports;
-    } else if (lowerPlatform.contains('nintendo') || lowerPlatform.contains('switch')) {
+    } else if (lowerPlatform.contains('nintendo') ||
+        lowerPlatform.contains('switch')) {
       return Icons.gamepad;
-    } else if (lowerPlatform.contains('pc') || lowerPlatform.contains('computer')) {
+    } else if (lowerPlatform.contains('pc') ||
+        lowerPlatform.contains('computer')) {
       return Icons.computer;
-    } else if (lowerPlatform.contains('mobile') || lowerPlatform.contains('android') || lowerPlatform.contains('ios')) {
+    } else if (lowerPlatform.contains('mobile') ||
+        lowerPlatform.contains('android') ||
+        lowerPlatform.contains('ios')) {
       return Icons.phone_android;
     } else {
       return Icons.sports_esports;
@@ -808,7 +859,7 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
 
   Map<String, List<Game>> _groupGamesByPlatform() {
     final Map<String, List<Game>> groupedGames = {};
-    
+
     for (var game in _games) {
       final platform = game.platform?.trim() ?? 'No Platform';
       if (!groupedGames.containsKey(platform)) {
@@ -816,30 +867,30 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
       }
       groupedGames[platform]!.add(game);
     }
-    
+
     final platforms = groupedGames.keys.toList();
     platforms.sort((a, b) {
       if (a == 'No Platform') return 1;
       if (b == 'No Platform') return -1;
       return a.compareTo(b);
     });
-    
+
     for (var platform in platforms) {
       groupedGames[platform]!.sort((a, b) => a.title.compareTo(b.title));
     }
-    
+
     return groupedGames;
   }
 
   List<Widget> _buildPlatformSections() {
     final groupedGames = _groupGamesByPlatform();
     final platforms = groupedGames.keys.toList();
-    
+
     List<Widget> sections = [];
-    
+
     for (var platform in platforms) {
       final games = groupedGames[platform]!;
-      
+
       sections.add(
         Container(
           margin: const EdgeInsets.only(bottom: 20),
@@ -858,7 +909,8 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     begin: Alignment.centerLeft,
@@ -896,7 +948,8 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
@@ -912,7 +965,6 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
                   ],
                 ),
               ),
-              
               ...games.map((game) {
                 return Container(
                   decoration: BoxDecoration(
@@ -963,7 +1015,8 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
                         if (game.genre != null && game.genre!.isNotEmpty)
                           Container(
                             margin: const EdgeInsets.only(top: 4),
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF0F3FF),
                               borderRadius: BorderRadius.circular(6),
@@ -989,11 +1042,14 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (game.completionStatus != null && game.completionStatus != 'not_started')
+                        if (game.completionStatus != null &&
+                            game.completionStatus != 'not_started')
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: _getCompletionStatusColor(game.completionStatus!),
+                              color: _getCompletionStatusColor(
+                                  game.completionStatus!),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -1035,7 +1091,7 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
         ),
       );
     }
-    
+
     return sections;
   }
 
@@ -1107,7 +1163,6 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -1137,7 +1192,8 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
                   controller: _titleController,
                   decoration: InputDecoration(
                     labelText: 'Game Title *',
-                    prefixIcon: const Icon(Icons.sports_esports, color: Color(0xFF6C63FF)),
+                    prefixIcon: const Icon(Icons.sports_esports,
+                        color: Color(0xFF6C63FF)),
                     filled: true,
                     fillColor: const Color(0xFFF8F9FF),
                   ),
@@ -1147,7 +1203,8 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
                   controller: _platformController,
                   decoration: InputDecoration(
                     labelText: 'Platform (e.g., PS5, PC, Switch)',
-                    prefixIcon: const Icon(Icons.computer, color: Color(0xFF6C63FF)),
+                    prefixIcon:
+                        const Icon(Icons.computer, color: Color(0xFF6C63FF)),
                     filled: true,
                     fillColor: const Color(0xFFF8F9FF),
                   ),
@@ -1157,7 +1214,8 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
                   controller: _genreController,
                   decoration: InputDecoration(
                     labelText: 'Genre (e.g., RPG, FPS, Strategy)',
-                    prefixIcon: const Icon(Icons.category, color: Color(0xFF6C63FF)),
+                    prefixIcon:
+                        const Icon(Icons.category, color: Color(0xFF6C63FF)),
                     filled: true,
                     fillColor: const Color(0xFFF8F9FF),
                   ),
@@ -1167,7 +1225,8 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
                   controller: _yearController,
                   decoration: InputDecoration(
                     labelText: 'Release Year',
-                    prefixIcon: const Icon(Icons.calendar_today, color: Color(0xFF6C63FF)),
+                    prefixIcon: const Icon(Icons.calendar_today,
+                        color: Color(0xFF6C63FF)),
                     filled: true,
                     fillColor: const Color(0xFFF8F9FF),
                   ),
@@ -1196,9 +1255,7 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
               ],
             ),
           ),
-          
           const SizedBox(height: 32),
-          
           const Text(
             'Your Game Collection',
             style: TextStyle(
@@ -1208,12 +1265,12 @@ class _GameCollectionScreenState extends State<GameCollectionScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          
           _loadingGames
               ? Center(
                   child: Column(
                     children: [
-                      CircularProgressIndicator(color: Theme.of(context).primaryColor),
+                      CircularProgressIndicator(
+                          color: Theme.of(context).primaryColor),
                       const SizedBox(height: 16),
                       const Text(
                         'Loading your game collection...',
@@ -1315,7 +1372,8 @@ class _FriendListScreenState extends State<FriendListScreen> {
   Future<void> _loadFriends() async {
     setState(() => _loadingFriends = true);
     try {
-      final userId = Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
+      final userId =
+          Provider.of<AuthProvider>(context, listen: false).currentUser?.id;
       if (userId != null) {
         final friends = await ApiService.getFriends(userId);
         setState(() => _friends = friends);
@@ -1401,7 +1459,6 @@ class _FriendListScreenState extends State<FriendListScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -1432,7 +1489,8 @@ class _FriendListScreenState extends State<FriendListScreen> {
                   decoration: InputDecoration(
                     labelText: "Friend's Email",
                     hintText: 'Enter email address',
-                    prefixIcon: const Icon(Icons.email, color: Color(0xFF6C63FF)),
+                    prefixIcon:
+                        const Icon(Icons.email, color: Color(0xFF6C63FF)),
                     filled: true,
                     fillColor: const Color(0xFFF8F9FF),
                   ),
@@ -1460,9 +1518,7 @@ class _FriendListScreenState extends State<FriendListScreen> {
               ],
             ),
           ),
-          
           const SizedBox(height: 32),
-          
           const Text(
             'Your Friends',
             style: TextStyle(
@@ -1472,12 +1528,12 @@ class _FriendListScreenState extends State<FriendListScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          
           _loadingFriends
               ? Center(
                   child: Column(
                     children: [
-                      CircularProgressIndicator(color: Theme.of(context).primaryColor),
+                      CircularProgressIndicator(
+                          color: Theme.of(context).primaryColor),
                       const SizedBox(height: 16),
                       const Text(
                         'Loading friends list...',
@@ -1565,7 +1621,10 @@ class _FriendListScreenState extends State<FriendListScreen> {
                               height: 50,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF6C63FF), Color(0xFF8B78FF)],
+                                  colors: [
+                                    Color(0xFF6C63FF),
+                                    Color(0xFF8B78FF)
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
@@ -1596,7 +1655,8 @@ class _FriendListScreenState extends State<FriendListScreen> {
                               ),
                             ),
                             trailing: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF0F3FF),
                                 borderRadius: BorderRadius.circular(20),
@@ -1604,7 +1664,8 @@ class _FriendListScreenState extends State<FriendListScreen> {
                               child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.games, size: 14, color: Color(0xFF6C63FF)),
+                                  Icon(Icons.games,
+                                      size: 14, color: Color(0xFF6C63FF)),
                                   SizedBox(width: 4),
                                   Text(
                                     'Gamer',
