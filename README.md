@@ -78,6 +78,7 @@ This project addresses the common coordination challenges of gaming nights by of
 
 ```text
 
+---
 ## 🚀 Live Deployment
 
 **Backend API:**  https://lfg.infinityfree.me/api/
@@ -119,6 +120,7 @@ flutter build web --release
 ```bash
 mysql -u username -p database_name < schema.sql
 
+---
 ## 🎮 User Flow
 
 1. **Register** — Create an account  
@@ -127,7 +129,7 @@ mysql -u username -p database_name < schema.sql
 4. **Find Friends** — Connect with gamers  
 5. **Create Session** — Schedule an event  
 6. **RSVP** — Confirm attendance  
-7. **Manage** — Update profile and sessions  
+7. **Manage** — Update profile and sessions
 
 ---
 
@@ -161,7 +163,6 @@ mysql -u username -p database_name < schema.sql
 **Instructor:** Dr. Mhmd Kadri  
 
 ---
-
 ## 📸 Screenshots
 
 *Coming soon*
