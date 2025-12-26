@@ -143,8 +143,9 @@ The mobile app is currently available via:
 
 ## ⚙️ Installation & Setup
 
-### 📱 Frontend Setup
+### 📱 Frontend/backend Setup
 ```bash
+### 🗄️ frontend Setup
 # Clone the repository
 git clone https://github.com/Mariam-El-Jarkas/lfg-connect.git
 
@@ -160,4 +161,18 @@ flutter run
 # Build for web
 flutter build web --release
 
+
+
+
+### 🗄️ Backend Setup (Local)
+
+```bash
+# Ensure you have a local server (e.g., XAMPP, MAMP) with MySQL
+
+# Import the database schema
+mysql -u username -p database_name < path_to_repo/api/schema.sql
+
+# (Optional) To deploy the backend, upload PHP files from the `api` folder to a web server
+# Place files in public_html or htdocs
+# Set permissions: 644 for files, 755 for directories
 
