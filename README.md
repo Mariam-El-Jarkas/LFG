@@ -76,7 +76,7 @@ This project addresses the common coordination challenges of gaming nights by of
 
 ## 🗂️ Project Structure
 
-```text
+*To be added*
 
 ---
 ## 🚀 Live Deployment
@@ -94,8 +94,6 @@ This project addresses the common coordination challenges of gaming nights by of
 ## ⚙️ Installation & Setup
 
 ### 📱 Frontend Setup
-
-```bash
 # Clone the repository
 git clone https://github.com/Mariam-El-Jarkas/lfg-connect.git
 
@@ -110,17 +108,7 @@ flutter run
 
 # Build for web
 flutter build web --release
-## 🗄️ Backend Setup
 
-### Upload PHP files to your server
-- Place files in `public_html` or `htdocs`
-- Permissions: `644` for files, `755` for folders
-
-### Import the database schema
-```bash
-mysql -u username -p database_name < schema.sql
-
----
 ## 🎮 User Flow
 
 1. **Register** — Create an account  
@@ -129,7 +117,7 @@ mysql -u username -p database_name < schema.sql
 4. **Find Friends** — Connect with gamers  
 5. **Create Session** — Schedule an event  
 6. **RSVP** — Confirm attendance  
-7. **Manage** — Update profile and sessions
+7. **Manage** — Update profile and sessions  
 
 ---
 
@@ -163,6 +151,16 @@ mysql -u username -p database_name < schema.sql
 **Instructor:** Dr. Mhmd Kadri  
 
 ---
+
+## 🙏 Acknowledgments
+
+- Flutter team for the framework
+- PHP & MySQL communities
+- Testers and early users
+- Gaming community inspiration
+
+---
+
 ## 📸 Screenshots
 
 *Coming soon*
@@ -170,4 +168,5 @@ mysql -u username -p database_name < schema.sql
 ---
 
 🎮 **Ready to level up your gaming sessions? LFG Connect has you covered.**
+
 
