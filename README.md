@@ -85,7 +85,7 @@ This project addresses the common coordination challenges of gaming nights by of
 
 **Frontend / App Deployment**
 The mobile app is currently available via:
-- **Web Build:** [Open in browser](https://your-web-build-link.com)
+- **Web Build:** [Open in browser](https://lfg.infinityfree.me/)
 - **Android APK:** Direct installation
 - **App Stores:** Coming soon
 
