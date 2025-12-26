@@ -24,7 +24,7 @@ This project addresses the common coordination challenges of gaming nights by of
 
 ### 🎮 Core Features
 - 👤 **Secure Authentication** — Email & password login
-- 🎮 **Personal Game Library** — Add, view, and manage owned games
+- 🎮 **Personal Game Library** — Add, delete owned games
 - 👥 **Friend Network** — Connect with gamers using email
 - 📅 **Session Planning** — Create and manage gaming events
 - ✅ **RSVP System** — Track attendance for sessions
