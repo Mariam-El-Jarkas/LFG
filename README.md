@@ -83,32 +83,13 @@ This project addresses the common coordination challenges of gaming nights by of
 
 **Backend API:**  https://lfg.infinityfree.me/api/
 
-
-### Access Options
-- **Web Build** — Open via mobile browser
-- **Android APK** — Direct installation
-- **App Stores** — Planned
+**Frontend / App Deployment**
+The mobile app is currently available via:
+- **Web Build:** [Open in browser](https://your-web-build-link.com)
+- **Android APK:** Direct installation
+- **App Stores:** Coming soon
 
 ---
-
-## ⚙️ Installation & Setup
-
-### 📱 Frontend Setup
-# Clone the repository
-git clone https://github.com/Mariam-El-Jarkas/lfg-connect.git
-
-# Navigate into the project
-cd lfg-connect
-
-# Install dependencies
-flutter pub get
-
-# Run the app
-flutter run
-
-# Build for web
-flutter build web --release
-
 ## 🎮 User Flow
 
 1. **Register** — Create an account  
@@ -149,16 +130,6 @@ flutter build web --release
 **Course:** CSCI410  
 **University:** Lebanese International University (LIU)  
 **Instructor:** Dr. Mhmd Kadri  
-
----
-
-## 🙏 Acknowledgments
-
-- Flutter team for the framework
-- PHP & MySQL communities
-- Testers and early users
-- Gaming community inspiration
-
 ---
 
 ## 📸 Screenshots
@@ -168,5 +139,25 @@ flutter build web --release
 ---
 
 🎮 **Ready to level up your gaming sessions? LFG Connect has you covered.**
+---
+
+## ⚙️ Installation & Setup
+
+### 📱 Frontend Setup
+```bash
+# Clone the repository
+git clone https://github.com/Mariam-El-Jarkas/lfg-connect.git
+
+# Navigate into the project
+cd lfg-connect
+
+# Install dependencies
+flutter pub get
+
+# Run the app
+flutter run
+
+# Build for web
+flutter build web --release
 
 
